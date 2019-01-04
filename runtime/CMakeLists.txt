@@ -1,23 +1,40 @@
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-file(GLOB_RECURSE RUNTIME_SOURCE  *.cpp
-						  		  *.h
-						  		  *.c)
+# -----------------------------------------------------------------------------------------------------------------------------
+# FLAGS
+# -----------------------------------------------------------------------------------------------------------------------------
 
-add_executable(Terminus-Runtime ${RUNTIME_SOURCE})
+if (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++")
+endif()
 
-set_target_properties( Terminus-Runtime
-    				   PROPERTIES
-    				   ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib/runtime"
-    				   LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib/runtime"
-    				   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/runtime" )
+# -----------------------------------------------------------------------------------------------------------------------------
+# FILES
+# -----------------------------------------------------------------------------------------------------------------------------
 
-IF(WIN32) # Check if we are on Windows
-  if(MSVC) # Check if we are using the Visual Studio compiler
-    set_target_properties(Terminus-Runtime PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-    set_target_properties(Terminus-Runtime PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-  endif()
-ENDIF()
+# Sources
+set(TE_RUNTIME_SOURCES "main.cpp")
 
-target_link_libraries(Terminus-Runtime Terminus-Engine)
+# Source groups
+source_group("src" FILES ${TE_RUNTIME_SOURCES})
+
+# -----------------------------------------------------------------------------------------------------------------------------
+# TARGETS
+# -----------------------------------------------------------------------------------------------------------------------------
+
+if(APPLE)
+    add_executable(TerminusRuntime MACOSX_BUNDLE ${TE_RUNTIME_SOURCES})
+elseif(WIN32)
+    add_executable(TerminusRuntime WIN32 ${TE_RUNTIME_SOURCES})
+else()
+    add_executable(TerminusRuntime ${TE_RUNTIME_SOURCES})
+endif()
+
+set_target_properties(TerminusRuntime PROPERTIES FOLDER "runtime")
+
+# -----------------------------------------------------------------------------------------------------------------------------
+# LINKING
+# -----------------------------------------------------------------------------------------------------------------------------
+
+# Link Platform
+target_link_libraries(TerminusRuntime TerminusEngine)

@@ -1,43 +1,53 @@
-#include <memory/linear_allocator.h>
+#include <memory/linear_allocator.hpp>
+#include <memory/memory_common.hpp>
+#include <assert.h>
 
-namespace terminus
+TE_BEGIN_TERMINUS_NAMESPACE
+
+LinearAllocator::LinearAllocator(void* memory, size_t max_size) : IAllocator()
 {
-    LinearAllocator::LinearAllocator(size_t _Size, void* _StartAddress) : Allocator(_Size, _StartAddress), m_CurrentPosition(_StartAddress)
-    {
-        
-    }
-    
-    LinearAllocator::~LinearAllocator()
-    {
-        m_CurrentPosition = nullptr;
-    }
-    
-    void* LinearAllocator::Allocate(size_t _AllocationSize, uint8 _Alignment)
-    {
-        assert(_AllocationSize != 0);
-        
-        uint8 adjustment = AllocatorUtility::AlignBackwardAdjustment(m_CurrentPosition, _Alignment);
-        
-        if (m_UsedMemory + adjustment + _AllocationSize > m_TotalMemory)
-            return nullptr;
-        
-        uintptr_t alignedAddress = (uintptr_t)m_CurrentPosition + adjustment;
-        m_CurrentPosition = (void*)(alignedAddress + _AllocationSize);
-        m_NumAllocations++;
-        m_UsedMemory += adjustment + _AllocationSize;
-        
-        return (void*)alignedAddress;
-    }
-    
-    void  LinearAllocator::Deallocate(void* _Address)
-    {
-        
-    }
-    
-    void LinearAllocator::Clear()
-    {
-        m_NumAllocations = 0;
-        m_UsedMemory = 0;
-        m_CurrentPosition = m_StartAddress;
-    }
+	// Only init once.
+	assert(m_memory == nullptr);
+	assert(memory);
+	assert(max_size > 0);
+
+	m_size = max_size;
+	m_memory = memory;
+	m_position = m_memory;
 }
+
+LinearAllocator::~LinearAllocator()
+{
+
+}
+
+void* LinearAllocator::allocate(size_t size, size_t align)
+{
+	assert(size != 0);
+
+	uint8_t adjustment = memory::align_backward_adjustment(m_position, align);
+
+	if (m_used_size + adjustment + size > m_size)
+		return nullptr;
+
+	uintptr_t aligned_address = (uintptr_t)m_position + adjustment;
+	m_position = (void*)(aligned_address + size);
+	m_num_allocations++;
+	m_used_size += adjustment + size;
+
+	return (void*)aligned_address;
+}
+
+void LinearAllocator::deallocate(void* ptr)
+{
+	assert(false);
+}
+
+void LinearAllocator::clear()
+{
+	m_num_allocations = 0;
+	m_used_size		  = 0;
+	m_position		  = m_memory;
+}
+
+TE_END_TERMINUS_NAMESPACE
